@@ -590,38 +590,26 @@ function pasWeerToe(c) {
   document.getElementById('weerLaden').style.display='none';
   document.getElementById('weerContent').style.display='block';
   document.getElementById('weerTemp').textContent = Math.round(c.temperature_2m)+'°';
-  const {cond,icon,grad} = weerCode(c.weather_code);
+  const {cond,icon} = weerCode(c.weather_code);
   document.getElementById('weerCond').textContent = cond;
   document.getElementById('weerIcon').textContent = icon;
   document.getElementById('weerLoc').textContent = locatieNaam;
   document.getElementById('weerWind').textContent = Math.round(c.wind_speed_10m);
   document.getElementById('weerRegen').textContent = c.precipitation.toFixed(1);
   document.getElementById('weerUV').textContent = Math.round(c.uv_index);
-  // Pas de licht-overlay aan op basis van weer — foto blijft altijd zichtbaar
-  // Geen overlay meer nodig — foto staat als hero bovenaan
 }
 
-function weerOverlayKleur(c) {
-  // Lichte tint over de foto op basis van weer — foto blijft zichtbaar
+function weerCode(c) {
   const h = new Date().getHours();
-  if (h>=22||h<=2) return 'linear-gradient(160deg,rgba(240,192,144,0.45) 0%,rgba(200,216,228,0.40) 100%)';
-  if (c<=2)  return 'linear-gradient(160deg,rgba(238,243,247,0.70) 0%,rgba(200,216,228,0.55) 100%)';
-  if (c<=3)  return 'linear-gradient(160deg,rgba(184,200,212,0.72) 0%,rgba(216,226,232,0.65) 100%)';
-  if (c<=49) return 'linear-gradient(160deg,rgba(212,224,232,0.75) 0%,rgba(235,240,244,0.70) 100%)';
-  if (c<=67) return 'linear-gradient(160deg,rgba(138,158,172,0.72) 0%,rgba(180,196,207,0.65) 100%)';
-  if (c<=77) return 'linear-gradient(160deg,rgba(212,224,232,0.75) 0%,rgba(244,246,248,0.70) 100%)';
-  return     'linear-gradient(160deg,rgba(74,90,101,0.72) 0%,rgba(122,142,152,0.65) 100%)';
-}
-  const h = new Date().getHours();
-  if (h>=22||h<=2) return {cond:'Middernachtzon',icon:'🌅',grad:'linear-gradient(160deg,#F0C090 0%,#E8D4B8 35%,#C8D8E4 100%)'};
-  if (c===0) return {cond:'Helder',icon:'☀️',grad:'linear-gradient(160deg,#C8DFF0 0%,#EEF3F7 45%,#E8EDF0 100%)'};
-  if (c<=2) return {cond:'Licht bewolkt',icon:'⛅',grad:'linear-gradient(160deg,#C8DFF0 0%,#EEF3F7 45%,#E8EDF0 100%)'};
-  if (c<=3) return {cond:'Bewolkt',icon:'☁️',grad:'linear-gradient(160deg,#B8C8D4 0%,#D8E2E8 50%,#E4E8EC 100%)'};
-  if (c<=49) return {cond:'Mist',icon:'🌫️',grad:'linear-gradient(160deg,#D4E0E8 0%,#EBF0F4 50%,#F4F6F8 100%)'};
-  if (c<=67) return {cond:'Regen',icon:'🌧️',grad:'linear-gradient(160deg,#8A9EAC 0%,#B4C4CF 50%,#D0D8DE 100%)'};
-  if (c<=77) return {cond:'Sneeuw',icon:'❄️',grad:'linear-gradient(160deg,#D4E0E8 0%,#EBF0F4 50%,#F4F6F8 100%)'};
-  if (c<=82) return {cond:'Regenbuien',icon:'🌦️',grad:'linear-gradient(160deg,#8A9EAC 0%,#B4C4CF 50%,#D0D8DE 100%)'};
-  return {cond:'Onweer',icon:'⛈️',grad:'linear-gradient(160deg,#4A5A65 0%,#7A8E98 50%,#A8B8C0 100%)'};
+  if (h>=22||h<=2) return {cond:'Middernachtzon',icon:'🌅'};
+  if (c===0) return {cond:'Helder',icon:'☀️'};
+  if (c<=2) return {cond:'Licht bewolkt',icon:'⛅'};
+  if (c<=3) return {cond:'Bewolkt',icon:'☁️'};
+  if (c<=49) return {cond:'Mist',icon:'🌫️'};
+  if (c<=67) return {cond:'Regen',icon:'🌧️'};
+  if (c<=77) return {cond:'Sneeuw',icon:'❄️'};
+  if (c<=82) return {cond:'Regenbuien',icon:'🌦️'};
+  return {cond:'Onweer',icon:'⛈️'};
 }
 
 // QUOTE
