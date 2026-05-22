@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#EEF3F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nordkaap → Bergen">
+<title>Nordkaap → Bergen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* === RESET & BASE === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  min-height: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === KLEURENPALET (Design System) === */
+:root {
+  --ice: #EEF3F7;
+  --frost: #DDE8F0;
+  --mist: #C8D8E4;
+  --horizon: #A8C0D0;
+  --fjord: #4A7FA5;
+  --arctic: #6BA3C2;
+  --tundra: #7A9E7E;
+  --midnight: #D4956A;
+  --ink: #1C2B35;
+  --slate: #4A6070;
+  --fog: #8A9EAC;
+  --glass-bg: rgba(255,255,255,0.55);
+  --glass-border: rgba(255,255,255,0.75);
+  --glass-shadow: rgba(100,140,170,0.12);
+  --ease-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Weer gradients */
+  --grad-clear:    linear-gradient(160deg, #C8DFF0 0%, #EEF3F7 45%, #E8EDF0 100%);
+  --grad-cloudy:   linear-gradient(160deg, #B8C8D4 0%, #D8E2E8 50%, #E4E8EC 100%);
+  --grad-rain:     linear-gradient(160deg, #8A9EAC 0%, #B4C4CF 50%, #D0D8DE 100%);
+  --grad-snow:     linear-gradient(160deg, #D4E0E8 0%, #EBF0F4 50%, #F4F6F8 100%);
+  --grad-storm:    linear-gradient(160deg, #4A5A65 0%, #7A8E98 50%, #A8B8C0 100%);
+  --grad-midnight: linear-gradient(160deg, #F0C090 0%, #E8D4B8 35%, #C8D8E4 100%);
+}
+
+/* === ACHTERGROND === */
+#app-bg {
+  position: fixed;
+  inset: 0;
+  background: var(--grad-clear);
+  transition: background 1.5s ease;
+  z-index: 0;
+}
+
+/* Subtiele noise texture */
+#app-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === GLASSMORPHISM COMPONENTEN === */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px var(--glass-shadow);
+}
+
+.glass-subtle {
+  background: rgba(255,255,255,0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+}
+
+.glass-dark {
+  background: rgba(28,43,53,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+}
+
+/* === HEADER === */
+.header {
+  padding: 16px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.header-title em {
+  font-style: italic;
+  color: var(--fjord);
+}
+.header-meta {
+  text-align: right;
+}
+.header-dag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--fjord);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+.header-datum {
+  font-size: 10px;
+  color: var(--fog);
+  margin-top: 2px;
+}
+
+/* === LOCATIEBALK === */
+.loc-bar {
+  margin: 0 20px 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.loc-bar:active { opacity: 0.7; }
+.loc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fjord);
+  flex-shrink: 0;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.loc-naam { font-size: 13px; font-weight: 300; color: var(--ink); }
+.loc-coords { font-size: 11px; color: var(--fog); margin-top: 1px; }
+.loc-refresh { font-size: 14px; color: var(--fog); margin-left: auto; }
+
+/* === QUOTE BANNER === */
+.quote-banner {
+  margin: 0 20px 12px;
+  padding: 14px 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid rgba(212,149,106,0.4);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px var(--glass-shadow);
+  cursor: pointer;
+  transition: opacity 0.2s;
+  animation: fadeSlideIn 0.6s var(--ease-out) 0.3s both;
+}
+.quote-banner:active { opacity: 0.8; }
+.quote-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--midnight);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 6px;
+}
+.quote-dag { float: right; font-size: 10px; color: var(--fog); }
+.quote-tekst {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.quote-vertaling { font-size: 11px; color: var(--slate); line-height: 1.4; }
+
+/* === TABS === */
+.tabs-wrap {
+  margin: 0 20px 14px;
+  padding: 3px;
+}
+.tabs {
+  display: flex;
+  gap: 2px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px 2px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.tab-btn .tab-ico { font-size: 14px; }
+.tab-btn.active {
+  background: rgba(255,255,255,0.6);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(100,140,170,0.15);
+}
+
+/* === CONTENT === */
+.content {
+  flex: 1;
+  padding: 0 20px 80px;
+  overflow-y: auto;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: block;
+  animation: fadeSlideIn 0.25s var(--ease-soft);
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === SECTIE LABEL === */
+.sectie-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--fog);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 8px;
+}
+
+/* === KAARTEN === */
+.kaart {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 24px var(--glass-shadow);
+  margin-bottom: 12px;
+  animation: fadeSlideIn 0.4s var(--ease-out) both;
+}
+.kaart:nth-child(1) { animation-delay: 0.05s; }
+.kaart:nth-child(2) { animation-delay: 0.10s; }
+.kaart:nth-child(3) { animation-delay: 0.15s; }
+
+/* === WEER === */
+.weer-rij {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.weer-temp {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1;
+}
+.weer-cond { font-size: 14px; font-weight: 400; color: var(--slate); margin-top: 2px; }
+.weer-loc { font-size: 12px; color: var(--fog); margin-top: 2px; }
+.weer-icon { font-size: 48px; }
+.weer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.weer-stat {
+  background: rgba(255,255,255,0.4);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+  border: 0.5px solid rgba(255,255,255,0.6);
+}
+.weer-stat-val { font-size: 14px; font-weight: 400; color: var(--ink); }
+.weer-stat-lbl { font-size: 10px; color: var(--fog); margin-top: 2px; }
+
+/* === AI KAART === */
+.ai-kaart {
+  background: rgba(28,43,53,0.70);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.ai-lbl {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
+}
+.ai-antwoord {
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  min-height: 48px;
+}
+.ai-antwoord p { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.chip {
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.chip:hover, .chip:active { background: rgba(255,255,255,0.15); color: white; }
+.ai-input-rij { display: flex; gap: 8px; }
+.ai-input {
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  color: white;
+  outline: none;
+}
+.ai-input::placeholder { color: rgba(255,255,255,0.3); }
+.ai-input:focus { border-color: rgba(74,127,165,0.5); }
+.ai-verstuur {
+  background: var(--fjord);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.ai-verstuur:active { opacity: 0.7; }
+.ai-laden {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  font-style: italic;
+  margin-top: 6px;
+  display: none;
+}
+
+/* === POI ITEMS === */
+.poi-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid rgba(100,140,170,0.15);
+}
+.poi-item:last-child { border-bottom: none; }
+.poi-ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(74,127,165,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.poi-naam { font-size: 13px; font-weight: 400; color: var(--ink); }
+.poi-afstand { font-size: 11px; color: var(--fog); margin-top: 2px; }
+.poi-omschr { font-size: 12px; color: var(--slate); margin-top: 3px; line-height: 1.4; }
+.poi-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: rgba(74,127,165,0.1);
+  color: var(--fjord);
+  font-weight: 500;
+}
+
+/* === LOGBOEK === */
+.lb-dag {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 24px var(--glass-shadow);
+}
+.lb-dag-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 0.5px solid rgba(100,140,170,0.15);
+}
+.lb-dag-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--ink);
+}
+.lb-dag-datum { font-size: 11px; color: var(--fog); }
+.lb-polar-link {
+  font-size: 11px;
+  color: var(--fjord);
+  cursor: pointer;
+  text-decoration: none;
+}
+.lb-body { padding: 14px 16px; }
+.lb-fotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.lb-foto {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 0.5px solid rgba(255,255,255,0.5);
+}
+.lb-foto-add {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px dashed var(--mist);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.3);
+  color: var(--fog);
+  font-size: 11px;
+  transition: all 0.15s;
+}
+.lb-foto-add:hover { border-color: var(--fjord); color: var(--fjord); background: rgba(74,127,165,0.05); }
+.lb-foto-add-ico { font-size: 20px; }
+.lb-tekst {
+  width: 100%;
+  border: 0.5px solid var(--mist);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink);
+  background: rgba(255,255,255,0.5);
+  resize: none;
+  min-height: 75px;
+  outline: none;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.lb-tekst:focus { border-color: var(--fjord); }
+.lb-acties { display: flex; gap: 8px; }
+.btn-primair {
+  flex: 1;
+  padding: 10px;
+  background: var(--fjord);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primair:active { opacity: 0.7; }
+.btn-secundair {
+  padding: 10px 14px;
+  background: rgba(74,127,165,0.1);
+  border: 0.5px solid rgba(74,127,165,0.3);
+  color: var(--fjord);
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-secundair:active { opacity: 0.7; }
+.lb-nieuw {
+  border: 1px dashed var(--mist);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--fog);
+  font-size: 13px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.2);
+}
+.lb-nieuw:hover { border-color: var(--fjord); color: var(--fjord); background: rgba(74,127,165,0.05); }
+
+/* === ROUTE === */
+.route-dag-header {
+  margin-bottom: 16px;
+}
+.route-dag-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.route-dag-datum { font-size: 12px; color: var(--fog); }
+.dag-entry { margin-bottom: 14px; }
+.dag-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.dag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--fjord);
+  flex-shrink: 0;
+}
+.dag-lbl {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--ink);
+}
+.dag-meta { font-size: 11px; color: var(--fog); margin-left: auto; }
+.dag-kaart {
+  margin-left: 19px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.dag-kaart p { font-size: 13px; color: var(--slate); line-height: 1.6; }
+.dag-toevoegen {
+  margin-left: 19px;
+  border: 1px dashed var(--mist);
+  border-radius: 10px;
+  padding: 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--fog);
+  font-size: 13px;
+  background: rgba(255,255,255,0.2);
+  transition: all 0.15s;
+}
+.dag-toevoegen:hover { border-color: var(--fjord); color: var(--fjord); }
+.notitie-form { margin-left: 19px; margin-top: 8px; display: none; }
+.notitie-textarea {
+  width: 100%;
+  border: 0.5px solid var(--mist);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink);
+  background: rgba(255,255,255,0.7);
+  resize: none;
+  min-height: 80px;
+  outline: none;
+  margin-bottom: 8px;
+}
+.notitie-textarea:focus { border-color: var(--fjord); }
+.notitie-acties { display: flex; gap: 8px; }
+
+/* === PRAKTISCH === */
+.prog-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.prog-track {
+  flex: 1;
+  height: 4px;
+  background: var(--mist);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--fjord);
+  border-radius: 2px;
+  transition: width 0.5s var(--ease-out);
+}
+.prog-tekst { font-size: 12px; font-weight: 400; color: var(--fjord); }
+.prac-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.prac-kaart {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  box-shadow: 0 2px 12px var(--glass-shadow);
+}
+.prac-kaart:active { transform: scale(0.97); opacity: 0.8; }
+.prac-ico { font-size: 22px; margin-bottom: 6px; }
+.prac-naam { font-size: 12px; font-weight: 500; color: var(--ink); }
+.prac-sub { font-size: 11px; color: var(--fog); margin-top: 2px; }
+
+/* === OFFLINE BADGE === */
+.offline-badge {
+  display: none;
+  margin: 0 20px 10px;
+  padding: 7px 12px;
+  background: rgba(212,149,106,0.15);
+  border: 0.5px solid rgba(212,149,106,0.4);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--midnight);
+  text-align: center;
+}
+
+/* === API KEY MODAL === */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(28,43,53,0.6);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--ice);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 16px 48px rgba(28,43,53,0.2);
+}
+.modal-titel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.modal-tekst { font-size: 13px; color: var(--slate); line-height: 1.6; margin-bottom: 16px; }
+.modal-input {
+  width: 100%;
+  border: 0.5px solid var(--mist);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: white;
+  outline: none;
+  margin-bottom: 12px;
+}
+.modal-input:focus { border-color: var(--fjord); }
+.modal-link { font-size: 11px; color: var(--fjord); text-decoration: none; display: block; margin-bottom: 16px; }
+
+/* === POLARSTEPS MODAL === */
+.polar-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  max-width: 380px;
+}
+.polar-modal h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.polar-pre {
+  font-family: monospace;
+  font-size: 12px;
+  background: var(--frost);
+  padding: 12px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--slate);
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.polar-acties { display: flex; gap: 8px; }
+
+/* === LADEN === */
+.laden {
+  text-align: center;
+  padding: 24px;
+  color: var(--fog);
+  font-size: 12px;
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--mist);
+  border-top-color: var(--fjord);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="app-bg"></div>
+
+<div class="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">Nordkaap <em>→</em> Bergen</div>
+    <div class="header-meta">
+      <div class="header-dag" id="hdrDag">Dag 1 van 21</div>
+      <div class="header-datum" id="hdrDatum"></div>
+    </div>
+  </div>
+
+  <!-- OFFLINE BADGE -->
+  <div class="offline-badge" id="offlineBadge">✈ Offline — gecachte data actief</div>
+
+  <!-- LOCATIEBALK -->
+  <div class="loc-bar glass-subtle" onclick="haalLocatie()">
+    <div class="loc-dot"></div>
+    <div style="flex:1">
+      <div class="loc-naam" id="locNaam">Locatie bepalen...</div>
+      <div class="loc-coords" id="locCoords">Tik om te vernieuwen</div>
+    </div>
+    <span class="loc-refresh">↻</span>
+  </div>
+
+  <!-- QUOTE BANNER -->
+  <div class="quote-banner" id="quoteBanner" onclick="toonQuoteDetail()">
+    <div class="quote-label">
+      ✦ Noors gezegde van de dag
+      <span class="quote-dag" id="quoteDagNum">Dag 1</span>
+    </div>
+    <div class="quote-tekst" id="quoteTekst">Laden...</div>
+    <div class="quote-vertaling" id="quoteVertaling"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-wrap glass-subtle">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="toonTab('vandaag', this)">
+        <span class="tab-ico">☀</span>Vandaag
+      </button>
+      <button class="tab-btn" onclick="toonTab('ontdek', this)">
+        <span class="tab-ico">🧭</span>Ontdek
+      </button>
+      <button class="tab-btn" onclick="toonTab('logboek', this)">
+        <span class="tab-ico">📷</span>Logboek
+      </button>
+      <button class="tab-btn" onclick="toonTab('route', this)">
+        <span class="tab-ico">📍</span>Route
+      </button>
+      <button class="tab-btn" onclick="toonTab('praktisch', this)">
+        <span class="tab-ico">⚙</span>Info
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TAB: VANDAAG -->
+    <div id="tab-vandaag" class="tab-panel active">
+      <div class="kaart" id="weerKaart">
+        <div class="sectie-label">Weer vandaag</div>
+        <div class="laden" id="weerLaden"><div class="spinner"></div>Weerdata ophalen...</div>
+        <div id="weerContent" style="display:none">
+          <div class="weer-rij">
+            <div>
+              <div class="weer-temp" id="weerTemp">—</div>
+              <div class="weer-cond" id="weerCond">—</div>
+              <div class="weer-loc" id="weerLoc"></div>
+            </div>
+            <div class="weer-icon" id="weerIcon">🌤</div>
+          </div>
+          <div class="weer-grid">
+            <div class="weer-stat"><div class="weer-stat-val" id="weerWind">—</div><div class="weer-stat-lbl">wind km/h</div></div>
+            <div class="weer-stat"><div class="weer-stat-val" id="weerRegen">—</div><div class="weer-stat-lbl">neerslag mm</div></div>
+            <div class="weer-stat"><div class="weer-stat-val" id="weerUV">—</div><div class="weer-stat-lbl">UV-index</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-kaart">
+        <div class="ai-lbl">✦ AI Reisassistent</div>
+        <div class="ai-antwoord" id="aiAntwoord">
+          <p style="color:rgba(255,255,255,0.4)">📍 Locatie laden voor gepersonaliseerde tips — of stel direct een vraag!</p>
+        </div>
+        <div class="chips">
+          <span class="chip" onclick="vraagAI('Wat zijn de mooiste stops vandaag vanuit onze locatie? Geef concrete namen.')">Stops vandaag 🗺</span>
+          <span class="chip" onclick="vraagAI('Zoek een goede campervriendelijke overnachtingsplek vanavond in de buurt.')">Camperplek 🏕</span>
+          <span class="chip" onclick="vraagAI('Welke lokale Noorse gerechten moet ik nu proberen in deze regio?')">Eten & drinken 🍽</span>
+          <span class="chip" onclick="vraagAI('Hoe is het weer de komende 3 dagen en wat raden jullie aan om te doen?')">Weekplan 📅</span>
+        </div>
+        <div class="ai-input-rij">
+          <input class="ai-input" id="aiInput" type="text" placeholder="Stel een vraag..."
+            onkeydown="if(event.key==='Enter')verstuurAI()">
+          <button class="ai-verstuur" onclick="verstuurAI()">↑</button>
+        </div>
+        <div class="ai-laden" id="aiLaden">Even nadenken...</div>
+      </div>
+    </div>
+
+    <!-- TAB: ONTDEK -->
+    <div id="tab-ontdek" class="tab-panel">
+      <div class="ai-kaart">
+        <div class="ai-lbl">✦ Bezienswaardigheden in de buurt</div>
+        <div class="laden" id="poiLaden"><div class="spinner" style="border-top-color:rgba(255,255,255,0.5)"></div><span style="color:rgba(255,255,255,0.4)">Tips laden op locatie...</span></div>
+        <div id="poiContent" style="display:none"></div>
+        <button class="chip" style="margin-top:8px;width:100%;text-align:center;padding:9px" onclick="laadPOIs()">↻ Vernieuwen op locatie</button>
+      </div>
+      <div class="kaart">
+        <div class="sectie-label">Friluftsliv — vrij kamperen</div>
+        <div class="poi-item">
+          <div class="poi-ico">⛺</div>
+          <div>
+            <div class="poi-naam">Allemannsretten</div>
+            <div class="poi-afstand">Noors recht op vrij verblijf in de natuur</div>
+            <div class="poi-omschr">Min. 150m van bebouwing · Max. 2 nachten op dezelfde plek · Geen sporen achterlaten</div>
+          </div>
+        </div>
+        <div class="poi-item">
+          <div class="poi-ico">🗺</div>
+          <div>
+            <div class="poi-naam">Camperplek via AI</div>
+            <div class="poi-omschr">Vraag de AI om concrete plekken vanavond</div>
+            <span class="poi-tag" onclick="vraagAIEnWissel('Zoek campervriendelijke overnachtingsplekken vanavond in de buurt. Geef concrete namen en omschrijvingen.')" style="cursor:pointer">Vraag AI →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LOGBOEK -->
+    <div id="tab-logboek" class="tab-panel">
+      <div id="logboekContainer"></div>
+      <div class="lb-nieuw" onclick="voegLogDagToe()">
+        <span style="font-size:20px;color:var(--fjord)">+</span>
+        <span>Nieuwe dag toevoegen aan logboek</span>
+      </div>
+    </div>
+
+    <!-- TAB: ROUTE -->
+    <div id="tab-route" class="tab-panel">
+      <div class="route-dag-header">
+        <div class="route-dag-titel" id="routeDagTitel">Dag 1</div>
+        <div class="route-dag-datum" id="routeDagDatum"></div>
+      </div>
+      <div id="routeLog">
+        <div class="dag-entry">
+          <div class="dag-hdr">
+            <div class="dag-dot"></div>
+            <div class="dag-lbl">Dag 1 — Nordkaap</div>
+            <div class="dag-meta">13 juni</div>
+          </div>
+          <div class="dag-kaart">
+            <p>Het avontuur begint! Nordkaap — het noordelijkste punt van Europa. 21 dagen voor de boeg richting Bergen. 🏔</p>
+          </div>
+        </div>
+      </div>
+      <div class="dag-toevoegen" onclick="toonNotitieForm()">
+        <span style="color:var(--fjord);font-size:18px">+</span>
+        Dag toevoegen
+      </div>
+      <div class="notitie-form" id="notitieForm">
+        <div class="kaart">
+          <div class="sectie-label">Nieuwe dagnotitie</div>
+          <textarea class="notitie-textarea" id="notitieTekst" placeholder="Waar waren jullie? Wat maakte deze dag bijzonder?"></textarea>
+          <div class="notitie-acties">
+            <button class="btn-primair" onclick="slaNotitieOp()">Opslaan</button>
+            <button class="btn-secundair" onclick="annuleerNotitie()">Annuleer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PRAKTISCH -->
+    <div id="tab-praktisch" class="tab-panel">
+      <div class="kaart">
+        <div class="sectie-label">Voortgang</div>
+        <div class="prog-wrap">
+          <div class="prog-track"><div class="prog-fill" id="progFill" style="width:5%"></div></div>
+          <div class="prog-tekst" id="progTekst">Dag 1 / 21</div>
+        </div>
+        <div style="font-size:11px;color:var(--fog)">Nordkaap → Bergen · ~2.100 km · 13 juni – 3 juli</div>
+      </div>
+
+      <div class="prac-grid">
+        <div class="prac-kaart" onclick="vraagAIEnWissel('Wat zijn de regels voor rijden in Noorwegen met een camper? Tol, snelheidslimieten, brandstof tips.')">
+          <div class="prac-ico">⛽</div>
+          <div class="prac-naam">Brandstof & Tol</div>
+          <div class="prac-sub">AutoPASS · tankstations</div>
+        </div>
+        <div class="prac-kaart" onclick="vraagAIEnWissel('Beste supermarkten in Noorwegen voor kampeerders: Rema 1000, Kiwi, Coop. Openingstijden en tips.')">
+          <div class="prac-ico">🛒</div>
+          <div class="prac-naam">Boodschappen</div>
+          <div class="prac-sub">Rema · Kiwi · Coop</div>
+        </div>
+        <div class="prac-kaart" onclick="vraagAIEnWissel('Noorse alarmnummers: politie, ambulance, bergredding, kustbewaking. Met uitleg wanneer welk nummer.')">
+          <div class="prac-ico">🆘</div>
+          <div class="prac-naam">Noodgevallen</div>
+          <div class="prac-sub">112 · 113 · 110</div>
+        </div>
+        <div class="prac-kaart" onclick="vraagAIEnWissel('Beste apps voor een camperreis door Noorwegen: Yr.no, Ut.no, veerboten, offline kaarten.')">
+          <div class="prac-ico">📱</div>
+          <div class="prac-naam">Handige apps</div>
+          <div class="prac-sub">Yr · Ut.no · Maps.me</div>
+        </div>
+      </div>
+
+      <div class="ai-kaart">
+        <div class="ai-lbl">✦ Snel vragen</div>
+        <div class="chips" style="margin-bottom:0">
+          <span class="chip" onclick="vraagAIEnWissel('Leg Allemannsretten uit: het Noorse recht op vrij kamperen. Regels, grenzen, do\'s en don\'ts.')">Allemannsretten ⛺</span>
+          <span class="chip" onclick="vraagAIEnWissel('Welke veerboten zijn nodig op de route Nordkaap naar Bergen? Kosten, reserveren, tijden.')">Veerboten ⛴</span>
+          <span class="chip" onclick="vraagAIEnWissel('Praktische camper tips Noorwegen: drinkwater, afval, grijswater, stroomaansluiting, servicepoints.')">Camper basis 🚐</span>
+          <span class="chip" onclick="vraagAIEnWissel('Welke fjorden mag ik absoluut niet missen op de route van Nordkaap naar Bergen?')">Fjorden 🏔</span>
+        </div>
+      </div>
+
+      <div class="kaart">
+        <div class="sectie-label">Reislog exporteren</div>
+        <div style="font-size:12px;color:var(--slate);margin-bottom:10px">Download je complete reislog als tekstbestand. Daarna te importeren in Google Drive, Notes of Polarsteps.</div>
+        <button class="btn-primair" onclick="slaOpInDrive()" style="width:100%">↓ Reislog downloaden</button>
+        <div id="driveStatus" style="font-size:11px;color:var(--fog);margin-top:8px;text-align:center"></div>
+      </div>
+
+      <div class="kaart">
+        <div class="sectie-label">API key</div>
+        <div style="font-size:12px;color:var(--slate);margin-bottom:10px">Vereist voor AI-functies en dagelijkse quotes. Wordt alleen lokaal op dit apparaat opgeslagen.</div>
+        <button class="btn-secundair" onclick="document.getElementById('apiModal').classList.add('open')" style="width:100%">🔑 API key instellen / wijzigen</button>
+      </div>
+
+      <div class="kaart">
+        <div class="sectie-label">Over deze app</div>
+        <div style="font-size:13px;color:var(--slate);line-height:1.7">
+          Nordkaap → Bergen · 21 dagen · 13 juni – 3 juli 2025<br>
+          AI aangedreven door Claude (Anthropic)<br>
+          Weer via Open-Meteo · Kaarten via OpenStreetMap
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- POLARSTEPS MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-titel">🔑 API key instellen</div>
+    <div class="modal-tekst">
+      Voor AI-functies en dagelijkse quotes heb je een Anthropic API key nodig. Deze wordt alleen lokaal op <em>dit apparaat</em> opgeslagen — nergens anders naartoe gestuurd.
+    </div>
+    <input class="modal-input" id="apiKeyInput" type="password" placeholder="sk-ant-api03-...">
+    <a class="modal-link" href="https://console.anthropic.com/settings/keys" target="_blank">→ Haal je key op via console.anthropic.com</a>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primair" onclick="slaApiKeyOp()">Opslaan & starten</button>
+      <button class="btn-secundair" onclick="document.getElementById('apiModal').classList.remove('open')">Later</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="polarModal">
+  <div class="polar-modal">
+    <h3>📲 Polarsteps export</h3>
+    <pre class="polar-pre" id="polarTekst"></pre>
+    <div class="polar-acties">
+      <button class="btn-primair" onclick="kopieerPolar()">Kopiëren</button>
+      <button class="btn-secundair" onclick="sluitPolarModal()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUOTE DETAIL MODAL -->
+<div class="modal-overlay" id="quoteModal">
+  <div class="modal">
+    <div class="modal-titel" style="font-style:italic" id="quoteModalTitel">—</div>
+    <div style="font-size:13px;color:var(--fjord);margin-bottom:8px" id="quoteModalVertaling"></div>
+    <div style="font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:16px" id="quoteModalUitleg"></div>
+    <button class="btn-secundair" onclick="document.getElementById('quoteModal').classList.remove('open')" style="width:100%">Sluiten</button>
+  </div>
+</div>
+
+<script>
+// === CONSTANTEN ===
+const API_URL = '/ai';  // Railway proxy — server handelt Anthropic call af
+const MODEL = 'claude-sonnet-4-20250514';
+const START_DATUM = new Date('2025-06-13');
+const EIND_DATUM = new Date('2025-07-03');
+const TOTAAL_DAGEN = 21;
+
+// === STATE ===
+let lat = null, lon = null, locatieNaam = 'Onbekend';
+let isOnline = navigator.onLine;
+
+// === INIT ===
+function init() {
+  controleerOnline();
+  updateDisplay();
+  laadQuote();
+  haalLocatie();
+  renderLogboek();
+  renderRoute();
+
+  // Toon API key modal als er nog geen key is
+  if (!getApiKey()) {
+    setTimeout(() => document.getElementById('apiModal').classList.add('open'), 600);
+  }
+
+  window.addEventListener('online', () => {
+    isOnline = true;
+    document.getElementById('offlineBadge').style.display = 'none';
+  });
+  window.addEventListener('offline', () => {
+    isOnline = false;
+    document.getElementById('offlineBadge').style.display = 'block';
+  });
+}
+
+function controleerOnline() {
+  if (!isOnline) document.getElementById('offlineBadge').style.display = 'block';
+}
+
+// === DISPLAY UPDATE ===
+function getDagNummer() {
+  // Gebaseerd op opgeslagen startdatum in localStorage, niet de systeemtijd.
+  // Eerste gebruik = dag 1. Stijgt alleen als gebruiker zelf een dag toevoegt.
+  const opgeslagenStart = localStorage.getItem('nw_reis_gestart');
+  if (!opgeslagenStart) {
+    localStorage.setItem('nw_reis_gestart', new Date().toISOString().split('T')[0]);
+    return 1;
+  }
+  const start = new Date(opgeslagenStart);
+  const nu = new Date();
+  const verschil = Math.floor((nu - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, Math.min(verschil + 1, TOTAAL_DAGEN));
+}
+
+function updateDisplay() {
+  const dag = getDagNummer();
+  const datum = new Date(START_DATUM);
+  datum.setDate(datum.getDate() + dag - 1);
+  const datumStr = datum.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  document.getElementById('hdrDag').textContent = `Dag ${dag} van ${TOTAAL_DAGEN}`;
+  document.getElementById('hdrDatum').textContent = datumStr;
+  document.getElementById('quoteDagNum').textContent = `Dag ${dag}`;
+  document.getElementById('routeDagTitel').textContent = `Dag ${dag}`;
+  document.getElementById('routeDagDatum').textContent = datumStr;
+
+  const pct = Math.round((dag / TOTAAL_DAGEN) * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTekst').textContent = `Dag ${dag} / ${TOTAAL_DAGEN}`;
+}
+
+// === LOCATIE ===
+function haalLocatie() {
+  document.getElementById('locNaam').textContent = 'Locatie bepalen...';
+  if (!navigator.geolocation) { setDemoLocatie(); return; }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      lat = pos.coords.latitude;
+      lon = pos.coords.longitude;
+      document.getElementById('locCoords').textContent = `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`;
+      await reverseGeocode();
+      haalWeer();
+      laadPOIs();
+    },
+    () => setDemoLocatie(),
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+function setDemoLocatie() {
+  lat = 71.1652; lon = 25.7847;
+  locatieNaam = 'Nordkaap';
+  document.getElementById('locNaam').textContent = 'Nordkaap (demo)';
+  document.getElementById('locCoords').textContent = '71.1652°N, 25.7847°E';
+  haalWeer(); laadPOIs();
+}
+
+async function reverseGeocode() {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=nl`);
+    const d = await r.json();
+    locatieNaam = d.address?.city || d.address?.town || d.address?.village || d.address?.county || 'Noorwegen';
+    const staat = d.address?.state ? `, ${d.address.state}` : '';
+    document.getElementById('locNaam').textContent = locatieNaam + staat;
+  } catch (err) {
+    locatieNaam = `${lat?.toFixed(2)}°N`;
+    document.getElementById('locNaam').textContent = locatieNaam;
+  }
+}
+
+// === WEER ===
+async function haalWeer() {
+  const cache = JSON.parse(localStorage.getItem('nw_weer') || 'null');
+  if (cache && (Date.now() - cache.ts) < 3600000) { pasWeerToe(cache.data); return; }
+  if (!isOnline && cache) { pasWeerToe(cache.data); return; }
+  if (!lat) return;
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,wind_speed_10m,weather_code,uv_index&wind_speed_unit=kmh&timezone=auto`;
+    const r = await fetch(url);
+    const d = await r.json();
+    localStorage.setItem('nw_weer', JSON.stringify({ ts: Date.now(), data: d.current }));
+    pasWeerToe(d.current);
+  } catch (err) {
+    document.getElementById('weerLaden').innerHTML = '<span style="color:var(--fog);font-size:12px">Weer niet beschikbaar</span>';
+  }
+}
+
+function pasWeerToe(c) {
+  document.getElementById('weerLaden').style.display = 'none';
+  document.getElementById('weerContent').style.display = 'block';
+  document.getElementById('weerTemp').textContent = Math.round(c.temperature_2m) + '°';
+  const { cond, icon, gradient } = weerCode(c.weather_code);
+  document.getElementById('weerCond').textContent = cond;
+  document.getElementById('weerIcon').textContent = icon;
+  document.getElementById('weerLoc').textContent = locatieNaam;
+  document.getElementById('weerWind').textContent = Math.round(c.wind_speed_10m);
+  document.getElementById('weerRegen').textContent = c.precipitation.toFixed(1);
+  document.getElementById('weerUV').textContent = Math.round(c.uv_index);
+  document.getElementById('app-bg').style.background = gradient;
+}
+
+function weerCode(code) {
+  const uur = new Date().getHours();
+  const isMiddernacht = uur >= 22 || uur <= 2;
+  if (isMiddernacht) return { cond: 'Middernachtzon', icon: '🌅', gradient: 'linear-gradient(160deg,#F0C090 0%,#E8D4B8 35%,#C8D8E4 100%)' };
+  if (code === 0) return { cond: 'Helder', icon: '☀️', gradient: 'linear-gradient(160deg,#C8DFF0 0%,#EEF3F7 45%,#E8EDF0 100%)' };
+  if (code <= 2) return { cond: 'Gedeeltelijk bewolkt', icon: '⛅', gradient: 'linear-gradient(160deg,#C8DFF0 0%,#EEF3F7 45%,#E8EDF0 100%)' };
+  if (code <= 3) return { cond: 'Bewolkt', icon: '☁️', gradient: 'linear-gradient(160deg,#B8C8D4 0%,#D8E2E8 50%,#E4E8EC 100%)' };
+  if (code <= 49) return { cond: 'Mist', icon: '🌫️', gradient: 'linear-gradient(160deg,#D4E0E8 0%,#EBF0F4 50%,#F4F6F8 100%)' };
+  if (code <= 67) return { cond: 'Regen', icon: '🌧️', gradient: 'linear-gradient(160deg,#8A9EAC 0%,#B4C4CF 50%,#D0D8DE 100%)' };
+  if (code <= 77) return { cond: 'Sneeuw', icon: '❄️', gradient: 'linear-gradient(160deg,#D4E0E8 0%,#EBF0F4 50%,#F4F6F8 100%)' };
+  if (code <= 82) return { cond: 'Regenbuien', icon: '🌦️', gradient: 'linear-gradient(160deg,#8A9EAC 0%,#B4C4CF 50%,#D0D8DE 100%)' };
+  return { cond: 'Onweer', icon: '⛈️', gradient: 'linear-gradient(160deg,#4A5A65 0%,#7A8E98 50%,#A8B8C0 100%)' };
+}
+
+// === QUOTE ===
+const FALLBACK_QUOTES = [
+  { quote: 'Naturen er den beste legen', vertaling: 'De natuur is de beste dokter', uitleg: 'Noors gezegde over de helende kracht van het buitenleven.' },
+  { quote: 'Veien er til for den som vandrer', vertaling: 'De weg is er voor wie hem bewandelt', uitleg: 'Over de waarde van op pad gaan en het avontuur aangaan.' },
+  { quote: 'Hjemsted er der hjertet er', vertaling: 'Thuis is waar het hart is', uitleg: 'Noors spreekwoord — ook onderweg kun je je thuis voelen.' },
+  { quote: 'Lite skal til for å gjøre en glad', vertaling: 'Weinig is nodig om iemand blij te maken', uitleg: 'Over de eenvoudige vreugde van het leven in de natuur.' },
+  { quote: 'Den som tier, samtykker', vertaling: 'Wie zwijgt, stemt in', uitleg: 'Klassiek Noors spreekwoord over stilte en instemming.' },
+];
+
+async function laadQuote() {
+  const vandaag = new Date().toISOString().split('T')[0];
+  const cache = JSON.parse(localStorage.getItem('nw_quote') || 'null');
+
+  // Toon gecachte quote als die van vandaag is én geldig
+  if (cache && cache.datum === vandaag && cache.quote && cache.quote !== 'undefined') {
+    toonQuote(cache); return;
+  }
+
+  // Offline → toon fallback
+  if (!isOnline) {
+    const fb = FALLBACK_QUOTES[getDagNummer() % FALLBACK_QUOTES.length];
+    toonQuote(fb); return;
+  }
+
+  const dag = getDagNummer();
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL, max_tokens: 300,
+        system: 'Je geeft ALLEEN een JSON object terug. Geen uitleg, geen markdown, geen tekst erbuiten. Exact dit formaat: {"quote":"de Noorse tekst","vertaling":"Nederlandse vertaling","uitleg":"één zin uitleg"}',
+        messages: [{ role: 'user', content: `Geef dag ${dag} van 21 van een camperreis Nordkaap naar Bergen een passend authentiek Noors spreekwoord over natuur, avontuur of vrijheid. Antwoord ALLEEN met JSON.` }]
+      })
+    });
+    if (!r.ok) throw new Error('API fout: ' + r.status);
+    const d = await r.json();
+    const txt = (d.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+
+    // Robuuste JSON parse
+    let q = null;
+    try { q = JSON.parse(txt); } catch {
+      // Probeer JSON te extraheren uit de tekst
+      const match = txt.match(/\{[\s\S]*\}/);
+      if (match) q = JSON.parse(match[0]);
+    }
+
+    if (!q || !q.quote || q.quote === 'undefined') throw new Error('Ongeldige quote respons');
+
+    q.datum = vandaag;
+    localStorage.setItem('nw_quote', JSON.stringify(q));
+    toonQuote(q);
+  } catch (e) {
+    console.warn('Quote laden mislukt:', e.message);
+    const fb = FALLBACK_QUOTES[dag % FALLBACK_QUOTES.length];
+    toonQuote(fb);
+  }
+}
+
+function toonQuote(q) {
+  const quoteStr = (q.quote && q.quote !== 'undefined') ? q.quote : 'Naturen er den beste legen';
+  const vertStr = q.vertaling || 'De natuur is de beste dokter';
+  document.getElementById('quoteTekst').textContent = '«' + quoteStr + '»';
+  document.getElementById('quoteVertaling').textContent = vertStr;
+}
+
+function toonQuoteDetail() {
+  const cache = JSON.parse(localStorage.getItem('nw_quote') || 'null');
+  if (!cache) return;
+  document.getElementById('quoteModalTitel').textContent = '«' + cache.quote + '»';
+  document.getElementById('quoteModalVertaling').textContent = cache.vertaling || '';
+  document.getElementById('quoteModalUitleg').textContent = cache.uitleg || 'Tik voor meer uitleg — AI laadt de betekenis.';
+  document.getElementById('quoteModal').classList.add('open');
+}
+
+// === AI ===
+function getApiKey() { return localStorage.getItem('nw_apikey') || ''; }
+
+function slaApiKeyOp() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key || key.length < 20) {
+    alert('Voer een geldige Anthropic API key in.');
+    return;
+  }
+  localStorage.setItem('nw_apikey', key);
+  document.getElementById('apiModal').classList.remove('open');
+  // Herlaad quote nu key beschikbaar is
+  localStorage.removeItem('nw_quote');
+  laadQuote();
+}
+
+function apiHeaders() {
+  const key = getApiKey();
+  return {
+    'Content-Type': 'application/json',
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
+    ...(key ? { 'x-api-key': key } : {}),
+  };
+}
+
+async function vraagAI(prompt) {
+  document.getElementById('aiInput').value = prompt;
+  await verstuurAI();
+}
+
+async function vraagAIEnWissel(prompt) {
+  toonTab('vandaag', document.querySelectorAll('.tab-btn')[0]);
+  document.getElementById('aiInput').value = prompt;
+  await verstuurAI();
+}
+
+async function verstuurAI() {
+  if (!isOnline) {
+    document.getElementById('aiAntwoord').innerHTML = '<p style="color:rgba(255,255,255,0.4)">✈ Offline — AI niet beschikbaar.</p>';
+    return;
+  }
+  if (!getApiKey()) {
+    document.getElementById('apiModal').classList.add('open');
+    return;
+  }
+  const inp = document.getElementById('aiInput');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  document.getElementById('aiLaden').style.display = 'block';
+  document.getElementById('aiAntwoord').innerHTML = `<p style="color:rgba(255,255,255,0.3);font-style:italic">Jij: ${q}</p>`;
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL, max_tokens: 500,
+        system: `Je bent een enthousiaste reisassistent voor een stel (2 personen) dat met een camper van Nordkaap naar Bergen rijdt over 21 dagen (13 juni – 3 juli 2025). Ze zijn nu bij: ${locatieNaam} (${lat || '?'}, ${lon || '?'}). Geef altijd praktisch, concreet advies. Max 150 woorden. Schrijf in het Nederlands. Gebruik soms een emoji.`,
+        messages: [{ role: 'user', content: q }]
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      const fout = d.error?.message || `HTTP ${r.status}`;
+      document.getElementById('aiAntwoord').innerHTML = `<p style="color:rgba(255,255,255,0.5)">⚠ API fout: ${fout}</p>`;
+    } else {
+      const ant = d.content?.[0]?.text || 'Geen antwoord ontvangen.';
+      document.getElementById('aiAntwoord').innerHTML = `<p>${ant.replace(/\n/g, '<br>')}</p>`;
+    }
+  } catch (err) {
+    document.getElementById('aiAntwoord').innerHTML = `<p style="color:rgba(255,255,255,0.5)">⚠ Fout: ${err.message}</p>`;
+  }
+  document.getElementById('aiLaden').style.display = 'none';
+}
+
+// === POI's ===
+async function laadPOIs() {
+  if (!lat) return;
+  document.getElementById('poiLaden').style.display = 'block';
+  document.getElementById('poiContent').style.display = 'none';
+
+  if (!isOnline) {
+    document.getElementById('poiLaden').innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;padding:12px">Offline — tips niet beschikbaar</p>';
+    return;
+  }
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL, max_tokens: 700,
+        system: 'Geef ALLEEN geldige JSON terug. Format: {"items":[{"naam":"...","type":"natuur|cultuur|camper|eten","afstand":"...","beschrijving":"...","emoji":"..."}]} Max 5 items. Items moeten echt en specifiek zijn voor de regio.',
+        messages: [{ role: 'user', content: `Locatie: ${lat.toFixed(3)}, ${lon.toFixed(3)} bij ${locatieNaam}. Wat zijn bezienswaardigheden en campervriendelijke plekken voor een camperreis Nordkaap naar Bergen?` }]
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.[0]?.text || '{}';
+    const { items } = JSON.parse(txt.replace(/```json|```/g, '').trim());
+    const html = items.map(i => `
+      <div class="poi-item">
+        <div class="poi-ico">${i.emoji || '📍'}</div>
+        <div>
+          <div class="poi-naam">${i.naam}</div>
+          <div class="poi-afstand">${i.afstand || 'In de buurt'}</div>
+          <div class="poi-omschr">${i.beschrijving}</div>
+          <span class="poi-tag">${i.type}</span>
+        </div>
+      </div>`).join('');
+    document.getElementById('poiLaden').style.display = 'none';
+    document.getElementById('poiContent').innerHTML = html;
+    document.getElementById('poiContent').style.display = 'block';
+  } catch (err) {
+    document.getElementById('poiLaden').innerHTML = `<p style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;padding:12px">⚠ ${err.message}</p>`;
+  }
+}
+
+// === LOGBOEK ===
+function getLogboek() { return JSON.parse(localStorage.getItem('nw_logboek') || '[]'); }
+function slaLogboekOp(lb) { localStorage.setItem('nw_logboek', JSON.stringify(lb)); }
+
+function renderLogboek() {
+  const lb = getLogboek();
+  const c = document.getElementById('logboekContainer');
+  if (!lb.length) {
+    c.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--fog);font-size:13px">Nog geen dagboekentries. Voeg hieronder je eerste dag toe!</div>';
+    return;
+  }
+  c.innerHTML = lb.map((d, i) => `
+    <div class="lb-dag">
+      <div class="lb-dag-header">
+        <div>
+          <div class="lb-dag-titel">Dag ${d.dag} — ${d.loc || 'Noorwegen'}</div>
+          <div class="lb-dag-datum">${d.datum}</div>
+        </div>
+        <a class="lb-polar-link" onclick="exportPolar(${i})">Polarsteps ↗</a>
+      </div>
+      <div class="lb-body">
+        <div class="lb-fotos">
+          ${(d.fotos || []).map(f => `<img class="lb-foto" src="${f}" onclick="openFoto('${f}')">`).join('')}
+          ${(d.fotos || []).length < 5 ? `
+            <label class="lb-foto-add">
+              <span class="lb-foto-add-ico">+</span>
+              <span>Foto</span>
+              <input type="file" accept="image/*" capture="environment" style="display:none" onchange="voegFotoToe(${i}, this)">
+            </label>` : ''}
+        </div>
+        <textarea class="lb-tekst" id="lbTekst_${i}" placeholder="Beschrijf deze dag... (max. 500 tekens)" maxlength="500">${d.tekst || ''}</textarea>
+        <div class="lb-acties">
+          <button class="btn-primair" onclick="slaLbDagOp(${i})">Opslaan</button>
+          <button class="btn-secundair" onclick="exportPolar(${i})">Polarsteps</button>
+          ${navigator.share ? `<button class="btn-secundair" onclick="deelDag(${i})">Delen</button>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function voegLogDagToe() {
+  const lb = getLogboek();
+  const dag = getDagNummer() + lb.length;
+  const datum = new Date(START_DATUM);
+  datum.setDate(datum.getDate() + dag - 1);
+  lb.push({
+    dag,
+    datum: datum.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }),
+    loc: locatieNaam,
+    lat, lon,
+    fotos: [],
+    tekst: ''
+  });
+  slaLogboekOp(lb);
+  renderLogboek();
+}
+
+function voegFotoToe(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Comprimeer foto
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxW = 800;
+      const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      const lb = getLogboek();
+      lb[idx].fotos.push(compressed);
+      slaLogboekOp(lb);
+      renderLogboek();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function slaLbDagOp(idx) {
+  const lb = getLogboek();
+  lb[idx].tekst = document.getElementById(`lbTekst_${idx}`).value;
+  slaLogboekOp(lb);
+  // Visuele feedback
+  const btns = document.querySelectorAll(`#logboekContainer .lb-dag:nth-child(${idx + 1}) .btn-primair`);
+  btns.forEach(b => { b.textContent = '✓ Opgeslagen'; setTimeout(() => b.textContent = 'Opslaan', 1500); });
+}
+
+function openFoto(src) {
+  window.open(src, '_blank');
+}
+
+function exportPolar(idx) {
+  const lb = getLogboek();
+  const d = lb[idx];
+  const tekst = `📅 Dag ${d.dag} — ${d.datum}
+📍 ${d.loc || 'Noorwegen'}${d.lat ? ` (${parseFloat(d.lat).toFixed(4)}°N, ${parseFloat(d.lon).toFixed(4)}°E)` : ''}
+
+${d.tekst || '(geen tekst toegevoegd)'}
+
+📸 ${(d.fotos || []).length} foto('s) bijgevoegd
+
+---`;
+  document.getElementById('polarTekst').textContent = tekst;
+  document.getElementById('polarModal').classList.add('open');
+}
+
+async function deelDag(idx) {
+  const lb = getLogboek();
+  const d = lb[idx];
+  try {
+    await navigator.share({
+      title: `Dag ${d.dag} — Noorwegen`,
+      text: `📍 ${d.loc}\n\n${d.tekst || ''}`
+    });
+  } catch { }
+}
+
+function kopieerPolar() {
+  navigator.clipboard?.writeText(document.getElementById('polarTekst').textContent).then(() => {
+    const btn = document.querySelector('#polarModal .btn-primair');
+    btn.textContent = '✓ Gekopieerd!';
+    setTimeout(() => btn.textContent = 'Kopiëren', 1500);
+  });
+}
+function sluitPolarModal() { document.getElementById('polarModal').classList.remove('open'); }
+
+// === ROUTE ===
+function getReisLog() { return JSON.parse(localStorage.getItem('nw_log') || '[]'); }
+
+function renderRoute() {
+  const log = getReisLog();
+  const container = document.getElementById('routeLog');
+  const bestaand = log.map((e, i) => `
+    <div class="dag-entry">
+      <div class="dag-hdr">
+        <div class="dag-dot"></div>
+        <div class="dag-lbl">Dag ${e.dag} — ${e.loc}</div>
+        <div class="dag-meta">${e.datum}</div>
+      </div>
+      <div class="dag-kaart"><p>${e.tekst}</p></div>
+    </div>`).join('');
+  // Voeg toe na de eerste vaste entry
+  const vaste = container.querySelector('.dag-entry');
+  if (vaste) vaste.insertAdjacentHTML('afterend', bestaand);
+}
+
+function toonNotitieForm() {
+  document.getElementById('notitieForm').style.display = 'block';
+  document.getElementById('notitieTekst').focus();
+}
+function annuleerNotitie() { document.getElementById('notitieForm').style.display = 'none'; }
+
+function slaNotitieOp() {
+  const tekst = document.getElementById('notitieTekst').value.trim();
+  if (!tekst) return;
+  const log = getReisLog();
+  const dag = getDagNummer() + log.length + 1;
+  const datum = new Date(START_DATUM);
+  datum.setDate(datum.getDate() + dag - 1);
+  const entry = {
+    dag,
+    datum: datum.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }),
+    loc: locatieNaam,
+    tekst
+  };
+  log.push(entry);
+  localStorage.setItem('nw_log', JSON.stringify(log));
+
+  const html = `<div class="dag-entry">
+    <div class="dag-hdr">
+      <div class="dag-dot"></div>
+      <div class="dag-lbl">Dag ${entry.dag} — ${entry.loc}</div>
+      <div class="dag-meta">${entry.datum}</div>
+    </div>
+    <div class="dag-kaart"><p>${entry.tekst}</p></div>
+  </div>`;
+  document.querySelector('.dag-toevoegen').insertAdjacentHTML('beforebegin', html);
+  document.getElementById('notitieTekst').value = '';
+  document.getElementById('notitieForm').style.display = 'none';
+}
+
+// === REISLOG DOWNLOADEN ===
+function slaOpInDrive() {
+  const status = document.getElementById('driveStatus');
+  const log = getReisLog();
+  const lb = getLogboek();
+
+  const inhoud = `# 🏔 Noorwegen Reislog
+Nordkaap → Bergen · ${new Date().toLocaleDateString('nl-NL')}
+13 juni – 3 juli 2025
+
+## Route daglog
+${log.length ? log.map(e => `### Dag ${e.dag} — ${e.loc} (${e.datum})\n${e.tekst}`).join('\n\n') : '(nog geen notities)'}
+
+## Logboek
+${lb.length ? lb.map(d => `### Dag ${d.dag} — ${d.loc} (${d.datum})\n${d.tekst || '(geen tekst)'}\n📸 ${(d.fotos || []).length} foto('s)`).join('\n\n') : '(nog geen logboekdagen)'}`;
+
+  // Download als .txt bestand — werkt altijd, ook offline
+  const blob = new Blob([inhoud], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `noorwegen-reislog-${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  status.textContent = '✓ Reislog gedownload — open in Notes of importeer in Drive';
+}
+
+// === TABS ===
+function toonTab(naam, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + naam).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// === START ===
+init();
+</script>
+</body>
+</html>
