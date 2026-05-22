@@ -1328,10 +1328,7 @@ async function verstuurAI() {
     document.getElementById('aiAntwoord').innerHTML = '<p style="color:rgba(255,255,255,0.4)">✈ Offline — AI niet beschikbaar.</p>';
     return;
   }
-  if (!getApiKey()) {
-    document.getElementById('apiModal').classList.add('open');
-    return;
-  }
+  
   const inp = document.getElementById('aiInput');
   const q = inp.value.trim();
   if (!q) return;
